@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use crate::db::{Game, get_tips_by_user, Tip, User};
 use std::collections::HashMap;
+use actix_web::cookie::time::format_description::well_known::iso8601::DateKind;
 use serde_json;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,6 +36,7 @@ pub struct MatchInfo {
     tip_away: Option<i32>,
     score_home: Option<i32>,
     score_away: Option<i32>,
+    date: u64,
 }
 
 struct ScoreConfig;
@@ -79,6 +81,7 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
                 tip_away: None,
                 score_home: Some(game.home_score),
                 score_away: Some(game.away_score),
+                date: game.date.clone(),
             };
 
             if let Some(tip) = tips_by_user.get(&game.id) {
@@ -309,6 +312,7 @@ mod tests {
             tip_away: Some(tip_away),
             score_home: Some(score_home),
             score_away: Some(score_away),
+            date: 1718048296,
         };
 
         calculate_score(&mut match_info);
@@ -335,6 +339,7 @@ mod tests {
             tip_away,
             score_home,
             score_away,
+            date: 1718048296,
         };
 
         calculate_score(&mut match_info);

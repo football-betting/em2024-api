@@ -26,6 +26,7 @@ pub struct Game {
     pub away_team: String,
     pub home_score: i32,
     pub away_score: i32,
+    pub date: u64,
 }
 
 pub fn establish_connection() -> SqliteResult<Connection> {
@@ -105,7 +106,7 @@ pub fn get_past_games() -> SqliteResult<Vec<Game>> {
     let conn = establish_connection()?;
 
 
-    let mut stmt = conn.prepare("SELECT id, home_team, away_team, home_score, away_score FROM match WHERE home_score >= 0 AND away_score >= 0")?;
+    let mut stmt = conn.prepare("SELECT id, home_team, away_team, home_score, away_score, utc_date FROM match WHERE home_score >= 0 AND away_score >= 0")?;
 
     let game_iter = stmt.query_map([], |row| {
         Ok(Game {
@@ -114,6 +115,7 @@ pub fn get_past_games() -> SqliteResult<Vec<Game>> {
             away_team: row.get(2)?,
             home_score: row.get(3)?,
             away_score: row.get(4)?,
+            date: row.get(5)?,
         })
     })?;
 
