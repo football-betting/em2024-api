@@ -6,7 +6,10 @@ mod service;
 #[get("/rating")]
 async fn rating() -> ActixResult<impl Responder> {
     match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
-        Ok(user_rating_list) => Ok(HttpResponse::Ok().json(user_rating_list)),
+        Ok(mut user_rating_list) => {
+            service::calculate_positions(&mut user_rating_list);
+            Ok(HttpResponse::Ok().json(user_rating_list))
+        },
         Err(e) => {
             eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
             Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
