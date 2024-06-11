@@ -1,5 +1,7 @@
 use serde::Serialize;
-use crate::db::{Game, get_tips_by_user, User};
+use crate::db::{Game, get_tips_by_user, Tip, User};
+use std::collections::HashMap;
+
 #[derive(Debug, Serialize)]
 pub struct UserRating {
     name: String,
@@ -50,11 +52,10 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
             extra_point: 0,
             tips: Vec::new(),
         };
-        let tips_by_user = get_tips_by_user(user.id)?;
-
-        for tip in &tips_by_user {
-            println!("{:?}", tip);
-        }
+        let tips_by_user: HashMap<i32, Tip> = get_tips_by_user(user.id)?
+            .into_iter()
+            .map(|tip| (tip.match_id, tip))
+            .collect();
 
         for game in &games {
 
@@ -71,11 +72,20 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
                 score_away: Some(game.away_score),
             };
 
-            if let Some(tip) = tips_by_user.iter().find(|&tip| tip.match_id == game.id) {
+            if let Some(tip) = tips_by_user.get(&game.id) {
                 match_info.tip_home = Some(tip.score_home);
                 match_info.tip_away = Some(tip.score_away);
 
                 calculate_score(&mut match_info);
+
+                user_rating.score_sum += match_info.score;
+                if match_info.score == ScoreConfig::WIN_EXACT {
+                    user_rating.sum_win_exact += 1;
+                } else if match_info.score == ScoreConfig::WIN_SCORE_DIFF {
+                    user_rating.sum_score_diff += 1;
+                } else if match_info.score == ScoreConfig::WIN_TEAM {
+                    user_rating.sum_team += 1;
+                }
             }
 
             user_rating.tips.push(match_info);
@@ -83,7 +93,28 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
         user_rating_list.push(user_rating);
     }
 
+    calculate_positions(&mut user_rating_list);
+
     Ok(user_rating_list)
+}
+
+pub fn calculate_positions(user_rating_list: &mut Vec<UserRating>) {
+    user_rating_list.sort_by(|a, b| b.score_sum.cmp(&a.score_sum));
+
+    let mut position = 0;
+    let mut last_point = -1;
+    let mut position_for_frontend = 0;
+
+    for user_rating in user_rating_list {
+        position += 1;
+        if user_rating.score_sum != last_point {
+            position_for_frontend = position;
+        }
+
+        user_rating.position = position_for_frontend;
+
+        last_point = user_rating.score_sum;
+    }
 }
 
 fn calculate_score(match_info: &mut MatchInfo) {
@@ -115,24 +146,125 @@ mod tests {
 
     use rstest::rstest;
 
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn test_calculate_positions() {
+            let mut user_rating_list = vec![
+                UserRating {
+                    name: "jahnedoe".to_string(),
+                    score_sum: 2,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+                UserRating {
+                    name: "ninja".to_string(),
+                    score_sum: 5,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+                UserRating {
+                    name: "babo".to_string(),
+                    score_sum: 10,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+                UserRating {
+                    name: "abdul".to_string(),
+                    score_sum: 9,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+                UserRating {
+                    name: "rockstar".to_string(),
+                    score_sum: 5,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+                UserRating {
+                    name: "theBest".to_string(),
+                    score_sum: 8,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+                UserRating {
+                    name: "johndoe".to_string(),
+                    score_sum: 9,
+                    user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                },
+            ];
+
+            calculate_positions(&mut user_rating_list);
+
+            assert_eq!(user_rating_list[0].position, 1);
+            assert_eq!(user_rating_list[0].name, "babo");
+            assert_eq!(user_rating_list[1].position, 2);
+            assert_eq!(user_rating_list[1].name, "abdul");
+            assert_eq!(user_rating_list[2].position, 2);
+            assert_eq!(user_rating_list[2].name, "johndoe");
+            assert_eq!(user_rating_list[3].position, 4);
+            assert_eq!(user_rating_list[3].name, "theBest");
+            assert_eq!(user_rating_list[4].position, 5);
+            assert_eq!(user_rating_list[4].name, "ninja");
+            assert_eq!(user_rating_list[5].position, 5);
+            assert_eq!(user_rating_list[5].name, "rockstar");
+            assert_eq!(user_rating_list[6].position, 7);
+            assert_eq!(user_rating_list[6].name, "jahnedoe");
+        }
+    }
+
     #[test]
-    fn test_blabla() {
-        let mut match_info = MatchInfo {
-            match_id: "1".to_string(),
-            user: "user".to_string(),
-            user_id: 1,
-            score: 0,
-            team1: "team1".to_string(),
-            team2: "team2".to_string(),
-            tip_home: Some(0),
-            tip_away: Some(0),
-            score_home: Some(0),
-            score_away: Some(1),
-        };
+    fn test_calculate_positions_when_two_first_place() {
+        let mut user_rating_list = vec![
+            UserRating {
+                name: "jahnedoe".to_string(),
+                score_sum: 8,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+            UserRating {
+                name: "ninja".to_string(),
+                score_sum: 10,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+            UserRating {
+                name: "babo".to_string(),
+                score_sum: 10,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+            UserRating {
+                name: "abdul".to_string(),
+                score_sum: 9,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+            UserRating {
+                name: "rockstar".to_string(),
+                score_sum: 5,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+            UserRating {
+                name: "theBest".to_string(),
+                score_sum: 5,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+            UserRating {
+                name: "johndoe".to_string(),
+                score_sum: 9,
+                user_id: 1,position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+            },
+        ];
 
-        calculate_score(&mut match_info);
+        calculate_positions(&mut user_rating_list);
 
-        assert_eq!(match_info.score, 0);
+        assert_eq!(user_rating_list[0].position, 1);
+        assert_eq!(user_rating_list[0].name, "ninja");
+        assert_eq!(user_rating_list[1].position, 1);
+        assert_eq!(user_rating_list[1].name, "babo");
+        assert_eq!(user_rating_list[2].position, 3);
+        assert_eq!(user_rating_list[2].name, "abdul");
+        assert_eq!(user_rating_list[3].position, 3);
+        assert_eq!(user_rating_list[3].name, "johndoe");
+        assert_eq!(user_rating_list[4].position, 5);
+        assert_eq!(user_rating_list[4].name, "jahnedoe");
+        assert_eq!(user_rating_list[5].position, 6);
+        assert_eq!(user_rating_list[5].name, "rockstar");
+        assert_eq!(user_rating_list[6].position, 6);
+        assert_eq!(user_rating_list[6].name, "theBest");
     }
 
     #[rstest]
