@@ -30,10 +30,20 @@ pub struct Game {
     pub away_score: Option<i32>,
 }
 
+#[derive(Debug)]
+pub struct Tip {
+    pub user_id: i32,
+    pub match_id: i32,
+    pub date: u64,
+    pub score_home: i32,
+    pub score_away: i32,
+}
+
 pub fn create_tables(conn: &Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS user (
-            email TEXT PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT NOT NULL,
             first_name TEXT NOT NULL,
             last_name TEXT NOT NULL,
             username TEXT NOT NULL,
@@ -44,7 +54,7 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
         [],
     )?;
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS game (
+        "CREATE TABLE IF NOT EXISTS match (
             id INTEGER PRIMARY KEY,
             home_team TEXT NOT NULL,
             away_team TEXT NOT NULL,
@@ -52,6 +62,19 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
             utc_date INTEGER NOT NULL,
             home_score INTEGER,
             away_score INTEGER
+        )",
+        [],
+    )?;
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS tip (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            match_id INTEGER NOT NULL,
+            date INTEGER NOT NULL,
+            score_home INTEGER NOT NULL,
+            score_away INTEGER NOT NULL,
+            FOREIGN KEY(user_id) REFERENCES user(id),
+            FOREIGN KEY(match_id) REFERENCES game(id)
         )",
         [],
     )?;
@@ -71,14 +94,26 @@ pub fn insert_users(conn: &Connection, users: &[User]) -> Result<()> {
 pub fn insert_games(conn: &Connection, games: &[Game]) -> Result<()> {
     for game in games {
         conn.execute(
-            "INSERT INTO game (id, home_team, away_team, status, utc_date, home_score, away_score) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO match (id, home_team, away_team, status, utc_date, home_score, away_score) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![game.id, game.home_team.name, game.away_team.name, game.status, game.utc_date, game.home_score, game.away_score],
         )?;
     }
     Ok(())
 }
+
+pub fn insert_tips(conn: &Connection, tips: &[Tip]) -> Result<()> {
+    for tip in tips {
+        conn.execute(
+            "INSERT INTO tip (user_id, match_id, date, score_home, score_away) VALUES (?1, ?2, ?3, ?4, ?5)",
+            params![tip.user_id, tip.match_id, tip.date, tip.score_home, tip.score_away],
+        )?;
+    }
+    Ok(())
+}
+
 pub fn setup() -> Connection {
     let conn = Connection::open_in_memory().unwrap();
+    //let conn = Connection::open("/home/ninja/workspace/github/football-betting/em2021-api/database_test.db").unwrap();
     create_tables(&conn).unwrap();
 
     let users = vec![
@@ -165,8 +200,8 @@ pub fn setup() -> Connection {
             away_team: lands["es"].clone(),
             status: String::from("scheduled"),
             utc_date: now - 86400, // 1 Tag vorher
-            home_score: Some(4),
-            away_score: Some(2),
+            home_score: Some(2),
+            away_score: Some(0),
         },
         Game {
             id: 2,
@@ -174,8 +209,8 @@ pub fn setup() -> Connection {
             away_team: lands["fr"].clone(),
             status: String::from("scheduled"),
             utc_date: now - 1800, // 30 Minuten vorher
-            home_score: Some(0),
-            away_score: Some(0),
+            home_score: Some(1),
+            away_score: Some(1),
         },
         Game {
             id: 3,
@@ -208,6 +243,67 @@ pub fn setup() -> Connection {
 
     insert_users(&conn, &users).unwrap();
     insert_games(&conn, &games).unwrap();
+
+    let tpis = vec![
+        Tip {
+            user_id: 1,
+            match_id: 1,
+            date: now - 86400,
+            score_home: 2,
+            score_away: 0,
+        },
+        Tip {
+            user_id: 1,
+            match_id: 2,
+            date: now - 86400,
+            score_home: 1,
+            score_away: 0,
+        },
+        Tip {
+            user_id: 2,
+            match_id: 1,
+            date: now - 86400,
+            score_home: 3,
+            score_away: 1,
+        },
+        Tip {
+            user_id: 2,
+            match_id: 2,
+            date: now - 86400,
+            score_home: 1,
+            score_away: 1,
+        },
+        Tip {
+            user_id: 3,
+            match_id: 1,
+            date: now - 86400,
+            score_home: 4,
+            score_away: 1,
+        },
+        Tip {
+            user_id: 3,
+            match_id: 2,
+            date: now - 86400,
+            score_home: 2,
+            score_away: 2,
+        },
+        Tip {
+            user_id: 4,
+            match_id: 1,
+            date: now - 86400,
+            score_home: 0,
+            score_away: 1,
+        },
+        Tip {
+            user_id: 4,
+            match_id: 2,
+            date: now - 86400,
+            score_home: 2,
+            score_away: 0,
+        },
+    ];
+
+    insert_tips(&conn, &tpis).unwrap();
 
     conn
 }

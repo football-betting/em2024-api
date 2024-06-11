@@ -1,9 +1,32 @@
 use actix_web::{web,get, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
 
 mod db;
+mod service;
+
+#[get("/rating")]
+async fn rating() -> ActixResult<impl Responder> {
+    match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
+        Ok(user_rating_list) => Ok(HttpResponse::Ok().json(user_rating_list)),
+        Err(e) => {
+            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
+        }
+    }
+}
 
 #[get("/users")]
 async fn users() -> ActixResult<impl Responder> {
+    match db::get_users() {
+        Ok(user_list) => Ok(HttpResponse::Ok().json(user_list)),
+        Err(e) => {
+            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
+        }
+    }
+}
+
+#[get("/games")]
+async fn games() -> ActixResult<impl Responder> {
     match db::get_users() {
         Ok(user_list) => Ok(HttpResponse::Ok().json(user_list)),
         Err(e) => {
@@ -36,6 +59,17 @@ async fn tips_by_user(user_id: web::Path<i32>) -> ActixResult<impl Responder> {
     }
 }
 
+#[get("/game")]
+async fn game() -> ActixResult<impl Responder> {
+    match db::get_past_games() {
+        Ok(game_list) => Ok(HttpResponse::Ok().json(game_list)),
+        Err(e) => {
+            eprintln!("Fehler beim Abrufen der Games: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Games"))
+        }
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
@@ -43,6 +77,8 @@ async fn main() -> std::io::Result<()> {
             .service(tips)
             .service(users)
             .service(tips_by_user)
+            .service(game)
+            .service(rating)
 
     })
         .bind("127.0.0.1:8080")?
