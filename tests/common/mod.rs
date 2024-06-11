@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use rusqlite::{params, Connection, Result};
+use serde::Serialize;
+use serde_json;
 
 #[derive(Debug)]
 pub struct User {
@@ -13,7 +15,7 @@ pub struct User {
     pub secret_winner: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Team {
     pub name: String,
     pub tla: String,
@@ -22,8 +24,8 @@ pub struct Team {
 #[derive(Debug)]
 pub struct Game {
     pub id: i32,
-    pub home_team: Team,
-    pub away_team: Team,
+    pub home_team: String,
+    pub away_team: String,
     pub status: String,
     pub utc_date: u64,
     pub home_score: Option<i32>,
@@ -56,7 +58,7 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS match (
             id INTEGER PRIMARY KEY,
-            home_team TEXT NOT NULL,
+            home_team he NOT NULL,
             away_team TEXT NOT NULL,
             status TEXT NOT NULL,
             utc_date INTEGER NOT NULL,
@@ -95,7 +97,7 @@ pub fn insert_games(conn: &Connection, games: &[Game]) -> Result<()> {
     for game in games {
         conn.execute(
             "INSERT INTO match (id, home_team, away_team, status, utc_date, home_score, away_score) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
-            params![game.id, game.home_team.name, game.away_team.name, game.status, game.utc_date, game.home_score, game.away_score],
+            params![game.id, game.home_team, game.away_team, game.status, game.utc_date, game.home_score, game.away_score],
         )?;
     }
     Ok(())
@@ -196,8 +198,8 @@ pub fn setup() -> Connection {
     let games = vec![
         Game {
             id: 1,
-            home_team: lands["de"].clone(),
-            away_team: lands["es"].clone(),
+            home_team: serde_json::to_string(&lands["de"].clone()).unwrap(),
+            away_team: serde_json::to_string(&lands["es"].clone()).unwrap(),
             status: String::from("scheduled"),
             utc_date: now - 86400, // 1 Tag vorher
             home_score: Some(2),
@@ -205,8 +207,8 @@ pub fn setup() -> Connection {
         },
         Game {
             id: 2,
-            home_team: lands["pl"].clone(),
-            away_team: lands["fr"].clone(),
+            home_team: serde_json::to_string(&lands["pl"].clone()).unwrap(),
+            away_team: serde_json::to_string(&lands["fr"].clone()).unwrap(),
             status: String::from("scheduled"),
             utc_date: now - 1800, // 30 Minuten vorher
             home_score: Some(1),
@@ -214,8 +216,8 @@ pub fn setup() -> Connection {
         },
         Game {
             id: 3,
-            home_team: lands["en"].clone(),
-            away_team: lands["nl"].clone(),
+            home_team: serde_json::to_string(&lands["en"].clone()).unwrap(),
+            away_team: serde_json::to_string(&lands["nl"].clone()).unwrap(),
             status: String::from("scheduled"),
             utc_date: now + 3600, // 1 Stunde später
             home_score: None,
@@ -223,8 +225,8 @@ pub fn setup() -> Connection {
         },
         Game {
             id: 4,
-            home_team: lands["fr"].clone(),
-            away_team: lands["en"].clone(),
+            home_team: serde_json::to_string(&lands["fr"].clone()).unwrap(),
+            away_team: serde_json::to_string(&lands["de"].clone()).unwrap(),
             status: String::from("scheduled"),
             utc_date: now + 86400, // 1 Tag später
             home_score: None,
@@ -232,8 +234,8 @@ pub fn setup() -> Connection {
         },
         Game {
             id: 5,
-            home_team: lands["nl"].clone(),
-            away_team: lands["pl"].clone(),
+            home_team: serde_json::to_string(&lands["en"].clone()).unwrap(),
+            away_team: serde_json::to_string(&lands["pl"].clone()).unwrap(),
             status: String::from("scheduled"),
             utc_date: now + (30 * 24 * 60 * 60), // 1 Monat später
             home_score: None,
@@ -300,6 +302,27 @@ pub fn setup() -> Connection {
             date: now - 86400,
             score_home: 2,
             score_away: 0,
+        },
+        Tip {
+            user_id: 5,
+            match_id: 1,
+            date: now - 86400,
+            score_home: 2,
+            score_away: 0,
+        },
+        Tip {
+            user_id: 5,
+            match_id: 2,
+            date: now - 86400,
+            score_home: 0,
+            score_away: 2,
+        },
+        Tip {
+            user_id: 6,
+            match_id: 1,
+            date: now - 86400,
+            score_home: 2,
+            score_away: 4,
         },
     ];
 

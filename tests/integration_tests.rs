@@ -30,6 +30,6 @@ mod tests {
     //     let mut stmt = conn.prepare("SELECT COUNT(*) FROM tip").unwrap();
     //     let tip_count: i32 = stmt.query_row([], |row| row.get(0)).unwrap();
     //
-    //     assert_eq!(tip_count, 8);
+    //     assert_eq!(tip_count, 11);
     // }
 }

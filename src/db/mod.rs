@@ -7,6 +7,7 @@ use dotenv::dotenv;
 pub struct User {
     pub id: i32,
     pub username: String,
+    pub department: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -21,6 +22,8 @@ pub struct Tip {
 #[derive(Debug, Serialize)]
 pub struct Game {
     pub id: i32,
+    pub home_team: String,
+    pub away_team: String,
     pub home_score: i32,
     pub away_score: i32,
 }
@@ -34,12 +37,13 @@ pub fn establish_connection() -> SqliteResult<Connection> {
 pub fn get_users() -> SqliteResult<Vec<User>> {
     let conn = establish_connection()?;
 
-    let mut stmt = conn.prepare("SELECT id, username FROM user")?;
+    let mut stmt = conn.prepare("SELECT id, username, department FROM user")?;
 
     let user_iter = stmt.query_map([], |row| {
         Ok(User {
             id: row.get(0)?,
             username: row.get(1)?,
+            department: row.get(2)?,
         })
     })?;
 
@@ -101,13 +105,15 @@ pub fn get_past_games() -> SqliteResult<Vec<Game>> {
     let conn = establish_connection()?;
 
 
-    let mut stmt = conn.prepare("SELECT id, home_score, away_score FROM match WHERE home_score >= 0 AND away_score >= 0")?;
+    let mut stmt = conn.prepare("SELECT id, home_team, away_team, home_score, away_score FROM match WHERE home_score >= 0 AND away_score >= 0")?;
 
     let game_iter = stmt.query_map([], |row| {
         Ok(Game {
             id: row.get(0)?,
-            home_score: row.get(1)?,
-            away_score: row.get(2)?,
+            home_team: row.get(1)?,
+            away_team: row.get(2)?,
+            home_score: row.get(3)?,
+            away_score: row.get(4)?,
         })
     })?;
 
