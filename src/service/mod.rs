@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use crate::db::{Game, get_tips_by_user, Tip, User};
 use std::collections::HashMap;
-use actix_web::cookie::time::format_description::well_known::iso8601::DateKind;
 use serde_json;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -10,11 +9,11 @@ pub struct Team {
     pub tla: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct UserRating {
     name: String,
     user_id: i32,
-    department: String,
+    pub(crate) department: String,
     position: i32,
     score_sum: i32,
     sum_win_exact: i32,
@@ -24,7 +23,7 @@ pub struct UserRating {
     tips: Vec<MatchInfo>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct MatchInfo {
     match_id: String,
     user: String,
@@ -126,6 +125,8 @@ pub fn calculate_positions(user_rating_list: &mut Vec<UserRating>) {
         user_rating.position = position_for_frontend;
 
         last_point = user_rating.score_sum;
+
+        user_rating.tips.clear();
     }
 }
 
