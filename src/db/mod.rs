@@ -105,10 +105,9 @@ pub fn get_tips_by_user(user_id: i32) -> SqliteResult<Vec<Tip>> {
 pub fn get_past_games() -> SqliteResult<Vec<Game>> {
     let conn = establish_connection()?;
 
+    let mut stmt = conn.prepare("SELECT id, homeTeam, awayTeam, homeScore, awayScore, utcDate FROM match WHERE homeScore >= 0 AND awayScore >= 0")?;
 
-    let mut stmt = conn.prepare("SELECT id, home_team, away_team, home_score, away_score, utc_date FROM match WHERE home_score >= 0 AND away_score >= 0")?;
-
-    let game_iter = stmt.query_map([], |row| {
+    let game_iter = match stmt.query_map([], |row| {
         Ok(Game {
             id: row.get(0)?,
             home_team: row.get(1)?,
@@ -117,13 +116,15 @@ pub fn get_past_games() -> SqliteResult<Vec<Game>> {
             away_score: row.get(4)?,
             date: row.get(5)?,
         })
-    })?;
+    }) {
+        Ok(game_iter) => game_iter,
+        Err(_) => return Ok(Vec::new()),
+    };
 
-    let mut game_list = Vec::new();
-    for tip in game_iter {
-        game_list.push(tip?);
+    let game_list: Result<Vec<_>, _> = game_iter.collect();
+    match game_list {
+        Ok(game_list) => Ok(game_list),
+        Err(_) => Ok(Vec::new()),
     }
-
-    Ok(game_list)
 }
 
