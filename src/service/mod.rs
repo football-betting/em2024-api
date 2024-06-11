@@ -48,8 +48,6 @@ impl ScoreConfig {
 pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRating>, Box<dyn std::error::Error>> {
     let mut user_rating_list = Vec::new();
 
-
-
     for user in &users {
         let mut user_rating = UserRating {
             name: user.username.clone(),
@@ -104,7 +102,7 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
         user_rating_list.push(user_rating);
     }
 
-    calculate_positions(&mut user_rating_list);
+    //calculate_positions(&mut user_rating_list);
 
     Ok(user_rating_list)
 }
