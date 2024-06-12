@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use actix_web::{web, get, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
 use serde::Serialize;
 use crate::service::{calculate_positions, UserRating};
 
@@ -16,6 +16,11 @@ pub struct RatingResponse {
 pub struct Response {
     table: RatingResponse,
     daily_winner: Option<String>,
+}
+
+#[derive(Serialize)]
+struct StatusResponse {
+    status: String,
 }
 
 #[get("/rating")]
@@ -57,53 +62,17 @@ async fn rating() -> ActixResult<impl Responder> {
     }
 }
 
-#[get("/users")]
-async fn users() -> ActixResult<impl Responder> {
-    match db::get_users() {
-        Ok(user_list) => Ok(HttpResponse::Ok().json(user_list)),
-        Err(e) => {
-            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
-            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
-        }
-    }
-}
+#[get("/")]
+async fn status() -> ActixResult<impl Responder> {
+    let response = StatusResponse {
+        status: String::from("works"),
+    };
 
-#[get("/games")]
-async fn games() -> ActixResult<impl Responder> {
-    match db::get_users() {
-        Ok(user_list) => Ok(HttpResponse::Ok().json(user_list)),
-        Err(e) => {
-            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
-            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
-        }
-    }
-}
-
-#[get("/tips")]
-async fn tips() -> ActixResult<impl Responder> {
-    match db::get_tips() {
-        Ok(tips_list) => Ok(HttpResponse::Ok().json(tips_list)),
-        Err(e) => {
-            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
-            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
-        }
-    }
-}
-
-
-#[get("/tips/{user_id}")]
-async fn tips_by_user(user_id: web::Path<i32>) -> ActixResult<impl Responder> {
-    match db::get_tips_by_user(user_id.into_inner()) {
-        Ok(tips_list) => Ok(HttpResponse::Ok().json(tips_list)),
-        Err(e) => {
-            eprintln!("Fehler beim Abrufen der Tipps: {}", e);
-            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Tipps"))
-        }
-    }
+    Ok(HttpResponse::Ok().json(response))
 }
 
 #[get("/game")]
-async fn game() -> ActixResult<impl Responder> {
+async fn games() -> ActixResult<impl Responder> {
     match db::get_past_games() {
         Ok(game_list) => Ok(HttpResponse::Ok().json(game_list)),
         Err(e) => {
@@ -117,10 +86,7 @@ async fn game() -> ActixResult<impl Responder> {
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(tips)
-            .service(users)
-            .service(tips_by_user)
-            .service(game)
+            .service(status)
             .service(rating)
 
     })

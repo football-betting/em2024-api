@@ -56,29 +56,6 @@ pub fn get_users() -> SqliteResult<Vec<User>> {
     Ok(user_list)
 }
 
-pub fn get_tips() -> SqliteResult<Vec<Tip>> {
-    let conn = establish_connection()?;
-
-    let mut stmt = conn.prepare("SELECT id, user_id, match_id, score_home, score_away FROM tip")?;
-
-    let tips_iter = stmt.query_map([], |row| {
-        Ok(Tip {
-            id: row.get(0)?,
-            user_id: row.get(1)?,
-            match_id: row.get(2)?,
-            score_home: row.get(3)?,
-            score_away: row.get(4)?,
-        })
-    })?;
-
-    let mut tips_list = Vec::new();
-    for tip in tips_iter {
-        tips_list.push(tip?);
-    }
-
-    Ok(tips_list)
-}
-
 pub fn get_tips_by_user(user_id: i32) -> SqliteResult<Vec<Tip>> {
     let conn = establish_connection()?;
 
