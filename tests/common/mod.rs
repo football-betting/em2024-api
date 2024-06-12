@@ -58,12 +58,12 @@ pub fn create_tables(conn: &Connection) -> Result<()> {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS match (
             id INTEGER PRIMARY KEY,
-            home_team he NOT NULL,
-            away_team TEXT NOT NULL,
+            homeTeam he NOT NULL,
+            awayTeam TEXT NOT NULL,
             status TEXT NOT NULL,
-            utc_date INTEGER NOT NULL,
-            home_score INTEGER,
-            away_score INTEGER
+            utcDate INTEGER NOT NULL,
+            homeScore INTEGER,
+            awayScore INTEGER
         )",
         [],
     )?;
@@ -96,7 +96,7 @@ pub fn insert_users(conn: &Connection, users: &[User]) -> Result<()> {
 pub fn insert_games(conn: &Connection, games: &[Game]) -> Result<()> {
     for game in games {
         conn.execute(
-            "INSERT INTO match (id, home_team, away_team, status, utc_date, home_score, away_score) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO match (id, homeTeam, awayTeam, status, utcDate, homeScore, awayScore) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![game.id, game.home_team, game.away_team, game.status, game.utc_date, game.home_score, game.away_score],
         )?;
     }
