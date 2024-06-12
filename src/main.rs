@@ -3,6 +3,19 @@ use actix_web::{web,get, App, HttpResponse, HttpServer, Responder, Result as Act
 mod db;
 mod service;
 
+#[get("/daily-winner")]
+async fn daily_winner() -> ActixResult<impl Responder> {
+    match service::daily_winner::DailyWinnerService::get_daily_winners() {
+        Ok(v) => {
+            Ok(HttpResponse::Ok().json(v))
+        },
+        Err(e) => {
+            eprintln!("Fehler beim Abrufen der täglichen Gewinner: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der täglichen Gewinner"))
+        }
+    }
+}
+
 #[get("/rating")]
 async fn rating() -> ActixResult<impl Responder> {
     match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
@@ -82,6 +95,7 @@ async fn main() -> std::io::Result<()> {
             .service(tips_by_user)
             .service(game)
             .service(rating)
+            .service(daily_winner)
 
     })
         .bind("127.0.0.1:8080")?

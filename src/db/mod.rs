@@ -2,6 +2,9 @@ use rusqlite::{Connection, Result as SqliteResult};
 use serde::Serialize;
 use std::env;
 use dotenv::dotenv;
+use serde_json::from_str;
+use crate::service::daily_winner::{Match, Score};
+use crate::service::daily_winner::Team;
 
 #[derive(Debug, Serialize)]
 pub struct User {
@@ -127,3 +130,39 @@ pub fn get_past_games() -> SqliteResult<Vec<Game>> {
     Ok(game_list)
 }
 
+pub fn get_already_finished_matches() -> Vec<Match> {
+    let conn = establish_connection().unwrap();
+
+    let mut stmt = conn.prepare("SELECT * FROM match WHERE status = 'FINISHED'").unwrap();
+
+    let match_iter = stmt.query_map([], |row| {
+        let home_team_row: String = row.get(1).unwrap();
+        let home_team: Team = from_str(home_team_row.as_str()).unwrap();
+
+        let away_team_row: String = row.get(2).unwrap();
+        let away_team: Team = from_str(away_team_row.as_str()).unwrap();
+
+        // let score_row: String = row.get(4).unwrap();
+        // let score: Score = from_str(score_row.as_str()).unwrap();
+
+        let utc_date: isize = row.get(4).unwrap();
+
+        Ok(Match {
+            id: row.get(0).unwrap(),
+            utcDate: utc_date.to_string(),
+            homeTeam: home_team,
+            awayTeam: away_team,
+            // score,
+            status: row.get(3).unwrap(),
+            homeScore: row.get(5).unwrap(),
+            awayScore: row.get(6).unwrap(),
+        })
+    }).unwrap();
+
+    let mut match_list = Vec::new();
+    for tip in match_iter {
+        match_list.push(tip.unwrap());
+    }
+
+    match_list
+}

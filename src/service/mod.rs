@@ -1,8 +1,8 @@
+pub mod daily_winner;
+
 use serde::{Deserialize, Serialize};
 use crate::db::{Game, get_tips_by_user, Tip, User};
 use std::collections::HashMap;
-use actix_web::cookie::time::format_description::well_known::iso8601::DateKind;
-use serde_json;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Team {
