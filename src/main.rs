@@ -44,9 +44,9 @@ async fn daily_winner() -> ActixResult<impl Responder> {
 #[get("/user/{user_id}")]
 async fn user_by_id(user_id: web::Path<i32>) -> ActixResult<impl Responder> {
     match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
-        Ok(user_rating_list) => {
+        Ok(mut user_rating_list) => {
             let user_id = user_id.into_inner();
-
+            calculate_positions(&mut user_rating_list, false);
             let find_user = user_rating_list.iter().find(|user| user.user_id == user_id).cloned();
 
             let response = match find_user {
