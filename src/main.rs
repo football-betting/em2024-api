@@ -1,5 +1,5 @@
 use std::collections::{HashMap, HashSet};
-use actix_web::{get, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
+use actix_web::{get, App, HttpResponse, HttpServer, Responder, Result as ActixResult, web};
 use serde::Serialize;
 use crate::service::{calculate_positions, UserRating};
 
@@ -16,6 +16,11 @@ pub struct RatingResponse {
 pub struct Response {
     table: RatingResponse,
     daily_winner: Option<String>,
+}
+
+#[derive(Debug, Serialize)]
+pub struct UserResponse {
+    data: UserRating,
 }
 
 #[derive(Serialize)]
@@ -36,6 +41,28 @@ async fn daily_winner() -> ActixResult<impl Responder> {
     }
 }
 
+#[get("/user/{user_id}")]
+async fn user_by_id(user_id: web::Path<i32>) -> ActixResult<impl Responder> {
+    match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
+        Ok(user_rating_list) => {
+            let user_id = user_id.into_inner();
+
+            let find_user = user_rating_list.iter().find(|user| user.user_id == user_id).cloned();
+
+            let response = match find_user {
+                Some(user) => UserResponse { data: user },
+                None => return Ok(HttpResponse::NotFound().body("User not found")),
+            };
+
+            Ok(HttpResponse::Ok().json(response))
+        },
+        Err(e) => {
+            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
+        }
+    }
+}
+
 #[get("/rating")]
 async fn rating() -> ActixResult<impl Responder> {
     match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
@@ -51,11 +78,11 @@ async fn rating() -> ActixResult<impl Responder> {
             for department in departments {
                 let mut department_users: Vec<UserRating> = cloned_user_rating_list.iter().filter(|user| user.department == department).cloned().collect();
 
-                calculate_positions(&mut department_users);
+                calculate_positions(&mut department_users, true);
                 department_ratings.insert(department, department_users);
             }
 
-            calculate_positions(&mut user_rating_list);
+            calculate_positions(&mut user_rating_list, true);
             let rating_response = RatingResponse {
                 global: user_rating_list,
                 departments: department_ratings,
@@ -102,6 +129,7 @@ async fn main() -> std::io::Result<()> {
             .service(status)
             .service(rating)
             .service(daily_winner)
+            .service(user_by_id)
     })
         .bind("127.0.0.1:8080")?
         .run()

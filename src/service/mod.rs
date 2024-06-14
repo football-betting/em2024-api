@@ -14,7 +14,7 @@ pub struct Team {
 #[derive(Debug, Clone, Serialize)]
 pub struct UserRating {
     name: String,
-    user_id: i32,
+    pub(crate) user_id: i32,
     pub(crate) department: String,
     position: i32,
     score_sum: i32,
@@ -41,6 +41,7 @@ pub struct MatchInfo {
 }
 
 struct ScoreConfig;
+
 impl ScoreConfig {
     pub const NO_WIN_TEAM: i32 = 0;
     pub const WIN_EXACT: i32 = 4;
@@ -70,7 +71,6 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
             .collect();
 
         for game in &games {
-
             let mut match_info = MatchInfo {
                 match_id: game.id.to_string(),
                 user: user.username.clone(),
@@ -111,7 +111,7 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
     Ok(user_rating_list)
 }
 
-pub fn calculate_positions(user_rating_list: &mut Vec<UserRating>) {
+pub fn calculate_positions(user_rating_list: &mut Vec<UserRating>, clear_tips: bool) {
     user_rating_list.sort_by(|a, b| b.score_sum.cmp(&a.score_sum));
 
     let mut position = 0;
@@ -128,14 +128,15 @@ pub fn calculate_positions(user_rating_list: &mut Vec<UserRating>) {
 
         last_point = user_rating.score_sum;
 
-        user_rating.tips.clear();
+        if clear_tips {
+            user_rating.tips.clear();
+        }
     }
 }
 
 fn calculate_score(match_info: &mut MatchInfo) {
     if let (Some(score_home), Some(score_away), Some(tip_home), Some(tip_away)) =
         (match_info.score_home, match_info.score_away, match_info.tip_home, match_info.tip_away) {
-
         if (score_home > score_away && tip_home > tip_away) || (score_home < score_away && tip_home < tip_away) {
             match_info.score = ScoreConfig::WIN_TEAM;
         }
@@ -171,37 +172,86 @@ mod tests {
                 UserRating {
                     name: "jahnedoe".to_string(),
                     score_sum: 2,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
                 UserRating {
                     name: "ninja".to_string(),
                     score_sum: 5,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
                 UserRating {
                     name: "babo".to_string(),
                     score_sum: 10,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
                 UserRating {
                     name: "abdul".to_string(),
                     score_sum: 9,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
                 UserRating {
                     name: "rockstar".to_string(),
                     score_sum: 5,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
                 UserRating {
                     name: "theBest".to_string(),
                     score_sum: 8,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
                 UserRating {
                     name: "johndoe".to_string(),
                     score_sum: 9,
-                    user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                    user_id: 1,
+                    department: "test".to_string(),
+                    position: 0,
+                    sum_win_exact: 0,
+                    sum_score_diff: 0,
+                    sum_team: 0,
+                    extra_point: 0,
+                    tips: Vec::new(),
                 },
             ];
 
@@ -230,37 +280,86 @@ mod tests {
             UserRating {
                 name: "jahnedoe".to_string(),
                 score_sum: 8,
-                user_id: 1,department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
             UserRating {
                 name: "ninja".to_string(),
                 score_sum: 10,
-                user_id: 1, department: "test".to_string(),position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
             UserRating {
                 name: "babo".to_string(),
                 score_sum: 10,
-                user_id: 1, department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
             UserRating {
                 name: "abdul".to_string(),
                 score_sum: 9,
-                user_id: 1, department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
             UserRating {
                 name: "rockstar".to_string(),
                 score_sum: 5,
-                user_id: 1, department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
             UserRating {
                 name: "theBest".to_string(),
                 score_sum: 5,
-                user_id: 1, department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
             UserRating {
                 name: "johndoe".to_string(),
                 score_sum: 9,
-                user_id: 1, department: "test".to_string(), position: 0,sum_win_exact: 0, sum_score_diff: 0, sum_team: 0, extra_point: 0, tips: Vec::new(),
+                user_id: 1,
+                department: "test".to_string(),
+                position: 0,
+                sum_win_exact: 0,
+                sum_score_diff: 0,
+                sum_team: 0,
+                extra_point: 0,
+                tips: Vec::new(),
             },
         ];
 
