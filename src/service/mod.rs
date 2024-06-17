@@ -37,7 +37,7 @@ pub struct MatchInfo {
     tip_away: Option<i32>,
     score_home: Option<i32>,
     score_away: Option<i32>,
-    date: u64,
+    pub(crate) date: u64,
 }
 
 struct ScoreConfig;

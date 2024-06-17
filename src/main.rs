@@ -50,7 +50,10 @@ async fn user_by_id(user_id: web::Path<i32>) -> ActixResult<impl Responder> {
             let find_user = user_rating_list.iter().find(|user| user.user_id == user_id).cloned();
 
             let response = match find_user {
-                Some(user) => UserResponse { data: user },
+                Some(mut user) => {
+                    user.tips.sort_by(|a, b| b.date.cmp(&a.date));
+                    UserResponse { data: user }
+                },
                 None => return Ok(HttpResponse::NotFound().body("User not found")),
             };
 
