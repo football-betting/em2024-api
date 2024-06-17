@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use actix_web::{get, App, HttpResponse, HttpServer, Responder, Result as ActixResult, web};
 use serde::Serialize;
-use crate::service::{calculate_positions, UserRating};
+use crate::service::{calculate_positions, MatchInfo, UserRating};
 
 mod db;
 mod service;
@@ -111,13 +111,22 @@ async fn status() -> ActixResult<impl Responder> {
     Ok(HttpResponse::Ok().json(response))
 }
 
-#[get("/game")]
-async fn games() -> ActixResult<impl Responder> {
-    match db::get_past_games() {
-        Ok(game_list) => Ok(HttpResponse::Ok().json(game_list)),
+#[get("/game/{game_id}")]
+pub async fn get_past_result_by_game_id(game_id: web::Path<String>) -> ActixResult<impl Responder> {
+    match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
+        Ok(user_rating_list) => {
+            let game_id = game_id.into_inner();
+
+            let tips_with_match_id: Vec<&MatchInfo> = user_rating_list.iter()
+                .flat_map(|user_rating| &user_rating.tips)
+                .filter(|tip| tip.match_id == game_id)
+                .collect();
+
+            Ok(HttpResponse::Ok().json(tips_with_match_id))
+        },
         Err(e) => {
-            eprintln!("Fehler beim Abrufen der Games: {}", e);
-            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Games"))
+            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
         }
     }
 }
@@ -130,6 +139,7 @@ async fn main() -> std::io::Result<()> {
             .service(rating)
             .service(daily_winner)
             .service(user_by_id)
+            .service(get_past_result_by_game_id)
     })
         .bind("127.0.0.1:8080")?
         .run()
