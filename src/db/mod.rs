@@ -34,8 +34,15 @@ pub struct Game {
 
 pub fn establish_connection() -> SqliteResult<Connection> {
     dotenv().ok();
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    Connection::open(database_url)
+    let mode = env::var("MODE").unwrap_or_else(|_| String::from("production"));
+
+    match mode.as_str() {
+        "test" => Connection::open_in_memory(),
+        _ => {
+            let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+            Connection::open(database_url)
+        }
+    }
 }
 
 pub fn get_users() -> SqliteResult<Vec<User>> {

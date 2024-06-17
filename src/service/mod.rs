@@ -22,12 +22,12 @@ pub struct UserRating {
     sum_score_diff: i32,
     sum_team: i32,
     extra_point: i32,
-    tips: Vec<MatchInfo>,
+    pub(crate) tips: Vec<MatchInfo>,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct MatchInfo {
-    match_id: String,
+    pub(crate) match_id: String,
     user: String,
     user_id: i32,
     score: i32,
