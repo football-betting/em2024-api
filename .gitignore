@@ -1,4 +1,5 @@
 /target
-database.db
+database*.db
 .env
 /.idea
+tarpaulin-report.html

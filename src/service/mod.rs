@@ -13,16 +13,16 @@ pub struct Team {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserRating {
-    name: String,
-    pub(crate) user_id: i32,
-    pub(crate) department: String,
-    position: i32,
-    score_sum: i32,
-    sum_win_exact: i32,
-    sum_score_diff: i32,
-    sum_team: i32,
-    extra_point: i32,
-    pub(crate) tips: Vec<MatchInfo>,
+    pub name: String,
+    pub user_id: i32,
+    pub department: String,
+    pub position: i32,
+    pub score_sum: i32,
+    pub sum_win_exact: i32,
+    pub sum_score_diff: i32,
+    pub sum_team: i32,
+    pub extra_point: i32,
+    pub tips: Vec<MatchInfo>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

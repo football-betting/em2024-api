@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use actix_web::{get, HttpResponse, Responder, Result as ActixResult, web};
 use serde_derive::{Deserialize, Serialize};
 use crate::{db, service};
@@ -11,19 +11,58 @@ struct StatusResponse {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RatingResponse {
-    global: Vec<UserRating>,
-    departments: HashMap<String, Vec<UserRating>>,
+    pub global: Vec<UserRating>,
+    pub departments: HashMap<String, Vec<UserRating>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Response {
-    table: RatingResponse,
+    pub table: RatingResponse,
     daily_winner: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserResponse {
-    data: UserRating,
+    pub data: UserRating,
+}
+
+#[get("/rating")]
+pub async fn rating() -> ActixResult<impl Responder> {
+    match service::get_user_rating(db::get_past_games().unwrap(),db::get_users().unwrap()) {
+        Ok(mut user_rating_list) => {
+            let cloned_user_rating_list = user_rating_list.clone();
+            let mut departments: HashSet<String> = HashSet::new();
+            let mut department_ratings: HashMap<String, Vec<UserRating>> = HashMap::new();
+
+            for user_rating in &cloned_user_rating_list {
+                departments.insert(user_rating.department.clone());
+            }
+
+            for department in departments {
+                let mut department_users: Vec<UserRating> = cloned_user_rating_list.iter().filter(|user| user.department == department).cloned().collect();
+
+                calculate_positions(&mut department_users, true);
+                department_ratings.insert(department, department_users);
+            }
+
+            calculate_positions(&mut user_rating_list, true);
+            let rating_response = RatingResponse {
+                global: user_rating_list,
+                departments: department_ratings,
+            };
+
+            let response = Response {
+                table: rating_response,
+                daily_winner: None,
+            };
+
+            Ok(HttpResponse::Ok().json(response))
+        },
+        Err(e) => {
+            eprintln!("Fehler beim Abrufen der Benutzer: {}", e);
+            Ok(HttpResponse::InternalServerError().body("Fehler beim Abrufen der Benutzer"))
+        }
+    }
 }
 
 #[get("/user/{user_id}")]
