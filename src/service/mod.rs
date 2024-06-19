@@ -11,7 +11,7 @@ pub struct Team {
     pub tla: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserRating {
     name: String,
     pub(crate) user_id: i32,
@@ -25,19 +25,19 @@ pub struct UserRating {
     pub(crate) tips: Vec<MatchInfo>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MatchInfo {
-    pub(crate) match_id: String,
-    user: String,
-    user_id: i32,
-    score: i32,
-    team1: Team,
-    team2: Team,
-    tip_home: Option<i32>,
-    tip_away: Option<i32>,
-    score_home: Option<i32>,
-    score_away: Option<i32>,
-    pub(crate) date: u64,
+    pub match_id: String,
+    pub user: String,
+    pub user_id: i32,
+    pub score: i32,
+    pub team1: Team,
+    pub team2: Team,
+    pub tip_home: Option<i32>,
+    pub tip_away: Option<i32>,
+    pub score_home: Option<i32>,
+    pub score_away: Option<i32>,
+    pub date: u64,
 }
 
 struct ScoreConfig;

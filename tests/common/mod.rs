@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::{env, fs};
+use dotenv::dotenv;
 use rusqlite::{params, Connection, Result};
 use serde::Serialize;
 use serde_json;
@@ -114,8 +116,17 @@ pub fn insert_tips(conn: &Connection, tips: &[Tip]) -> Result<()> {
 }
 
 pub fn setup() -> Connection {
-    let conn = Connection::open_in_memory().unwrap();
-    //let conn = Connection::open("/home/ninja/workspace/github/football-betting/em2021-api/database_test.db").unwrap();
+    dotenv().ok();
+
+    let database_url = env::var("DATABASE_URL_TEST").expect("DATABASE_URL_TEST must be set");
+
+    match fs::remove_file(&database_url) {
+        Ok(_) => println!("Datei wurde erfolgreich gelöscht."),
+        Err(e) => println!("Fehler beim Löschen der Datei: {}", e),
+    }
+
+    let conn = Connection::open(database_url).unwrap();
+
     create_tables(&conn).unwrap();
 
     let users = vec![

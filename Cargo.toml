@@ -1,10 +1,10 @@
 [package]
-name = "em2021-api"
+name = "em2021_api"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-actix-web = "4.0"
+actix-web = "^4.7"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 rusqlite  = "0.31.0"
@@ -15,3 +15,5 @@ mockall = "0.12.1"
 
 [dev-dependencies]
 rstest = "0.21"
+actix-rt = "2.10.0"
+
