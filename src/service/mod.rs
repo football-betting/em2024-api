@@ -255,7 +255,7 @@ mod tests {
                 },
             ];
 
-            calculate_positions(&mut user_rating_list);
+            calculate_positions(&mut user_rating_list, true);
 
             assert_eq!(user_rating_list[0].position, 1);
             assert_eq!(user_rating_list[0].name, "babo");
@@ -363,7 +363,7 @@ mod tests {
             },
         ];
 
-        calculate_positions(&mut user_rating_list);
+        calculate_positions(&mut user_rating_list, true);
 
         assert_eq!(user_rating_list[0].position, 1);
         assert_eq!(user_rating_list[0].name, "ninja");
