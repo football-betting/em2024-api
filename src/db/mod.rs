@@ -44,7 +44,9 @@ pub fn establish_connection() -> SqliteResult<Connection> {
         connection
     } else {
         let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-        Connection::open(database_url)?
+        let connection = Connection::open(database_url)?;
+        //fixtures::load_fixtures(&connection); # only when we want to load fixtures for start you local server and you dont have db
+        connection
     };
 
     Ok(conn)

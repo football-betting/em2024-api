@@ -8,10 +8,38 @@ This repository contains the backend API for the EM2024 application.
 To run the project, use the following command:
 
 ```bash
+cp .env.example .env # pleas fill in the .env file
+```
+
+#### Database
+
+If you want to have a test database, you can copy it from em2024-frontend when you initialize the application. Alternatively, 
+
+you can add the line fixtures::load_fixtures(&connection); in the file src/db/mod.rs. Then, start the server and access the URL once to create the database with fixtures.
+
+```rust
+pub fn establish_connection() -> SqliteResult<Connection> {
+    ...
+    let conn = if mode == "test" {
+        ...
+    } else {
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        let connection = Connection::open(database_url)?;
+        //fixtures::load_fixtures(&connection); # only when we want to load fixtures for start you local server and you dont have db
+        connection
+    };
+
+    Ok(conn)
+}
+```
+
+```
 cargo run
 ```
 
 The server will be available at: [http://localhost:8080/](http://localhost:8080/)
+
+
 
 ## Testing
 
