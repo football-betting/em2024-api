@@ -1,9 +1,11 @@
+mod fixtures;
+
 use rusqlite::{Connection, Result as SqliteResult};
 use serde::Serialize;
 use std::env;
 use dotenv::dotenv;
 use serde_json::from_str;
-use crate::service::daily_winner::{Match, Score};
+use crate::service::daily_winner::{Match};
 use crate::service::daily_winner::Team;
 
 #[derive(Debug, Serialize)]
@@ -35,12 +37,17 @@ pub struct Game {
 pub fn establish_connection() -> SqliteResult<Connection> {
     dotenv().ok();
 
-    let database_url = match env::var("MODE").unwrap_or_else(|_| String::from("production")).as_str() {
-        "test" => env::var("DATABASE_URL_TEST"),
-        _ => env::var("DATABASE_URL"),
-    }.expect("DATABASE_URL must be set");
+    let mode = env::var("MODE").unwrap_or_else(|_| String::from("production"));
+    let conn = if mode == "test" {
+        let connection = Connection::open_in_memory()?;
+        fixtures::load_fixtures(&connection);
+        connection
+    } else {
+        let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+        Connection::open(database_url)?
+    };
 
-    Connection::open(database_url)
+    Ok(conn)
 }
 
 pub fn get_users() -> SqliteResult<Vec<User>> {
@@ -148,4 +155,79 @@ pub fn get_already_finished_matches() -> Vec<Match> {
     }
 
     match_list
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_users() {
+        env::set_var("MODE", "test");
+        let users = get_users().unwrap();
+        assert_eq!(users.len(), 7);
+
+        assert_eq!(users[0].username, "JohnDoe");
+        assert_eq!(users[0].department, "Langenfeld");
+        assert_eq!(users[0].id, 1);
+
+        assert_eq!(users[1].username, "ToniKroos");
+        assert_eq!(users[1].department, "Langenfeld");
+        assert_eq!(users[1].id, 2);
+
+        assert_eq!(users[6].username, "SteveMcManaman");
+        assert_eq!(users[6].department, "London");
+        assert_eq!(users[6].id, 7);
+    }
+
+    #[test]
+    fn test_get_tips_by_user() {
+        env::set_var("MODE", "test");
+        let tips = get_tips_by_user(1).unwrap();
+        assert_eq!(tips.len(), 2);
+
+        assert_eq!(tips[0].id, 1);
+        assert_eq!(tips[0].user_id, 1);
+        assert_eq!(tips[0].match_id, 1);
+        assert_eq!(tips[0].score_home, 2);
+        assert_eq!(tips[0].score_away, 0);
+
+        assert_eq!(tips[1].id, 2);
+        assert_eq!(tips[1].user_id, 1);
+        assert_eq!(tips[1].match_id, 2);
+        assert_eq!(tips[1].score_home, 1);
+        assert_eq!(tips[1].score_away, 0);
+    }
+
+    #[test]
+    fn test_get_past_games() {
+        env::set_var("MODE", "test");
+        let games = get_past_games().unwrap();
+        assert_eq!(games.len(), 2);
+
+        assert_eq!(games[0].id, 1);
+        assert_eq!(games[0].home_score, 2);
+        assert_eq!(games[0].away_score, 0);
+
+        let home_team: Team = from_str(&games[0].home_team).unwrap();
+        assert_eq!(home_team.name.unwrap(), "Germany");
+        assert_eq!(home_team.tla.unwrap(), "GER");
+
+        let away_team: Team = from_str(&games[0].away_team).unwrap();
+        assert_eq!(away_team.name.unwrap(), "Spain");
+        assert_eq!(away_team.tla.unwrap(), "ESP");
+
+        assert_eq!(games[1].id, 2);
+        assert_eq!(games[1].home_score, 1);
+        assert_eq!(games[1].away_score, 1);
+
+        let home_team: Team = from_str(&games[1].home_team).unwrap();
+        assert_eq!(home_team.name.unwrap(), "Poland");
+        assert_eq!(home_team.tla.unwrap(), "POL");
+
+        let away_team: Team = from_str(&games[1].away_team).unwrap();
+        assert_eq!(away_team.name.unwrap(), "France");
+        assert_eq!(away_team.tla.unwrap(), "FRA");
+    }
 }

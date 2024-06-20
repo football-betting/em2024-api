@@ -106,8 +106,6 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
         user_rating_list.push(user_rating);
     }
 
-    //calculate_positions(&mut user_rating_list);
-
     Ok(user_rating_list)
 }
 

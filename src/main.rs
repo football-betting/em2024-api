@@ -1,5 +1,4 @@
 use actix_web::{get, App, HttpResponse, HttpServer, Responder, Result as ActixResult};
-use serde::{Deserialize, Serialize};
 
 mod db;
 mod service;
