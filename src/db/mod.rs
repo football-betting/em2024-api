@@ -165,6 +165,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_establish_connection() {
+        env::set_var("DATABASE_URL", ":memory:");
+        let conn = establish_connection().unwrap();
+        assert_eq!(conn.is_autocommit(), true);
+
+    }
+    #[test]
     fn test_get_users() {
         env::set_var("MODE", "test");
         let users = get_users().unwrap();
