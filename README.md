@@ -11,7 +11,7 @@ This repository contains the backend API for the EM2024 application.
 To run the project, use the following command:
 
 ```bash
-cp .env.example .env # pleas fill in the .env file
+cp .env.example .env # please fill in the .env file
 ```
 
 #### Database
