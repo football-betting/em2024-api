@@ -23,7 +23,6 @@ jobs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source $HOME/.cargo/env
           rustup default stable
-          cargo install cargo-tarpaulin
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -54,6 +53,9 @@ jobs:
 
       - name: Run tests
         run: cargo test --verbose
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
 
       - name: Run tarpaulin and generate coverage report
         run: cargo tarpaulin --out Xml
