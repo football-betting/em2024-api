@@ -4,15 +4,14 @@ use rusqlite::{Connection, Result as SqliteResult};
 use serde::Serialize;
 use std::env;
 use dotenv::dotenv;
-use serde_json::from_str;
-use crate::service::daily_winner::{Match};
-use crate::service::daily_winner::Team;
 
 #[derive(Debug, Serialize)]
 pub struct User {
     pub id: i32,
     pub username: String,
     pub department: String,
+    pub winner: String,
+    pub secret_winner: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -55,13 +54,15 @@ pub fn establish_connection() -> SqliteResult<Connection> {
 pub fn get_users() -> SqliteResult<Vec<User>> {
     let conn = establish_connection()?;
 
-    let mut stmt = conn.prepare("SELECT id, username, department FROM user")?;
+    let mut stmt = conn.prepare("SELECT id, username, department, winner, secretWinner FROM user")?;
 
     let user_iter = stmt.query_map([], |row| {
         Ok(User {
             id: row.get(0)?,
             username: row.get(1)?,
             department: row.get(2)?,
+            winner: row.get(3)?,
+            secret_winner: row.get(4)?,
         })
     })?;
 
@@ -122,55 +123,12 @@ pub fn get_past_games() -> SqliteResult<Vec<Game>> {
     }
 }
 
-pub fn get_already_finished_matches() -> Vec<Match> {
-    let conn = establish_connection().unwrap();
-
-    let mut stmt = conn.prepare("SELECT * FROM match WHERE status = 'FINISHED'").unwrap();
-
-    let match_iter = stmt.query_map([], |row| {
-        let home_team_row: String = row.get(1).unwrap();
-        let home_team: Team = from_str(home_team_row.as_str()).unwrap();
-
-        let away_team_row: String = row.get(2).unwrap();
-        let away_team: Team = from_str(away_team_row.as_str()).unwrap();
-
-        // let score_row: String = row.get(4).unwrap();
-        // let score: Score = from_str(score_row.as_str()).unwrap();
-
-        let utc_date: isize = row.get(4).unwrap();
-
-        Ok(Match {
-            id: row.get(0).unwrap(),
-            utcDate: utc_date.to_string(),
-            homeTeam: home_team,
-            awayTeam: away_team,
-            // score,
-            status: row.get(3).unwrap(),
-            homeScore: row.get(5).unwrap(),
-            awayScore: row.get(6).unwrap(),
-        })
-    }).unwrap();
-
-    let mut match_list = Vec::new();
-    for tip in match_iter {
-        match_list.push(tip.unwrap());
-    }
-
-    match_list
-}
-
-
 #[cfg(test)]
 mod tests {
+    use serde_json::from_str;
+    use crate::service::Team;
     use super::*;
 
-    #[test]
-    fn test_establish_connection() {
-        env::set_var("DATABASE_URL", ":memory:");
-        let conn = establish_connection().unwrap();
-        assert_eq!(conn.is_autocommit(), true);
-
-    }
     #[test]
     fn test_get_users() {
         env::set_var("MODE", "test");
@@ -220,23 +178,23 @@ mod tests {
         assert_eq!(games[0].away_score, 0);
 
         let home_team: Team = from_str(&games[0].home_team).unwrap();
-        assert_eq!(home_team.name.unwrap(), "Germany");
-        assert_eq!(home_team.tla.unwrap(), "GER");
+        assert_eq!(home_team.name, "Germany");
+        assert_eq!(home_team.tla, "GER");
 
         let away_team: Team = from_str(&games[0].away_team).unwrap();
-        assert_eq!(away_team.name.unwrap(), "Spain");
-        assert_eq!(away_team.tla.unwrap(), "ESP");
+        assert_eq!(away_team.name, "Spain");
+        assert_eq!(away_team.tla, "ESP");
 
         assert_eq!(games[1].id, 2);
         assert_eq!(games[1].home_score, 1);
         assert_eq!(games[1].away_score, 1);
 
         let home_team: Team = from_str(&games[1].home_team).unwrap();
-        assert_eq!(home_team.name.unwrap(), "Poland");
-        assert_eq!(home_team.tla.unwrap(), "POL");
+        assert_eq!(home_team.name, "Poland");
+        assert_eq!(home_team.tla, "POL");
 
         let away_team: Team = from_str(&games[1].away_team).unwrap();
-        assert_eq!(away_team.name.unwrap(), "France");
-        assert_eq!(away_team.tla.unwrap(), "FRA");
+        assert_eq!(away_team.name, "France");
+        assert_eq!(away_team.tla, "FRA");
     }
 }

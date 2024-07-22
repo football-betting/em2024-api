@@ -1,4 +1,4 @@
-pub mod daily_winner;
+
 
 use serde::{Deserialize, Serialize};
 use crate::db::{Game, get_tips_by_user, Tip, User};
@@ -53,16 +53,28 @@ pub fn get_user_rating(games: Vec<Game>, users: Vec<User>) -> Result<Vec<UserRat
     let mut user_rating_list = Vec::new();
 
     for user in &users {
+
+        let mut extra_point = ScoreConfig::NO_WIN_TEAM;
+        if user.winner == "ESP"
+        {
+            extra_point = 15;
+        }
+
+        if user.secret_winner == "ESP"
+        {
+            extra_point = 7;
+        }
+
         let mut user_rating = UserRating {
             name: user.username.clone(),
             user_id: user.id.clone(),
             department: user.department.clone(),
             position: 0,
-            score_sum: ScoreConfig::NO_WIN_TEAM,
+            score_sum: extra_point,
             sum_win_exact: 0,
             sum_score_diff: 0,
             sum_team: 0,
-            extra_point: 0,
+            extra_point,
             tips: Vec::new(),
         };
         let tips_by_user: HashMap<i32, Tip> = get_tips_by_user(user.id)?

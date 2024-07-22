@@ -205,7 +205,7 @@ fn get_users() -> Vec<DbUser> {
             username: String::from("JohnDoe"),
             department: String::from("Langenfeld"),
             winner: String::from("DEU"),
-            secret_winner: String::from("ENG"),
+            secret_winner: String::from("ESP"),
         },
         DbUser {
             email: String::from("toni@kroos.de"),
@@ -213,8 +213,8 @@ fn get_users() -> Vec<DbUser> {
             last_name: String::from("Kroos"),
             username: String::from("ToniKroos"),
             department: String::from("Langenfeld"),
-            winner: String::from("DEU"),
-            secret_winner: String::from("FRA"),
+            winner: String::from("ESP"),
+            secret_winner: String::from("DEU"),
         },
         DbUser {
             email: String::from("philipp@lahm.de"),
@@ -222,8 +222,8 @@ fn get_users() -> Vec<DbUser> {
             last_name: String::from("Lahm"),
             username: String::from("PhilippLahm"),
             department: String::from("Langenfeld"),
-            winner: String::from("ESP"),
-            secret_winner: String::from("ENG"),
+            winner: String::from("ENG"),
+            secret_winner: String::from("ESP"),
         },
         DbUser {
             email: String::from("lukas@podolski.pl"),
@@ -241,7 +241,7 @@ fn get_users() -> Vec<DbUser> {
             username: String::from("RobbieFowler"),
             department: String::from("London"),
             winner: String::from("NLD"),
-            secret_winner: String::from("ENG"),
+            secret_winner: String::from("ESP"),
         },
         DbUser {
             email: String::from("bobby@moore.com"),
@@ -275,7 +275,7 @@ fn create_tables(conn: &Connection) -> rusqlite::Result<()> {
             username TEXT NOT NULL,
             department TEXT NOT NULL,
             winner TEXT NOT NULL,
-            secret_winner TEXT NOT NULL
+            secretWinner TEXT NOT NULL
         )",
         [],
     )?;
@@ -310,7 +310,7 @@ fn create_tables(conn: &Connection) -> rusqlite::Result<()> {
 fn insert_users(conn: &Connection, users: &[DbUser]) -> rusqlite::Result<()> {
     for user in users {
         conn.execute(
-            "INSERT INTO user (email, first_name, last_name, username, department, winner, secret_winner) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+            "INSERT INTO user (email, first_name, last_name, username, department, winner, secretWinner) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
             params![user.email, user.first_name, user.last_name, user.username, user.department, user.winner, user.secret_winner],
         )?;
     }

@@ -139,21 +139,24 @@ mod tests {
         let global = &result.table.global;
         assert_eq!(global[0].name, "ToniKroos");
         assert_eq!(global[0].department, "Langenfeld");
-        assert_eq!(global[0].score_sum, 6);
+        assert_eq!(global[0].score_sum, 21);
         assert_eq!(global[0].position, 1);
         assert_eq!(global[0].sum_win_exact, 1);
         assert_eq!(global[0].sum_score_diff, 1);
+        assert_eq!(global[0].extra_point, 15);
         assert_eq!(global[0].sum_team, 0);
         assert_eq!(global[0].tips.len(), 0);
 
         assert_eq!(global[1].name, "JohnDoe");
         assert_eq!(global[1].department, "Langenfeld");
-        assert_eq!(global[1].score_sum, 4);
+        assert_eq!(global[1].score_sum, 11);
         assert_eq!(global[1].position, 2);
+        assert_eq!(global[1].extra_point, 7);
+
 
         assert_eq!(global[2].name, "RobbieFowler");
         assert_eq!(global[2].department, "London");
-        assert_eq!(global[2].score_sum, 4);
+        assert_eq!(global[2].score_sum, 11);
         assert_eq!(global[2].position, 2);
 
         assert_eq!(global[6].name, "SteveMcManaman");
@@ -171,9 +174,10 @@ mod tests {
         assert_eq!(result.data.user_id, 2);
         assert_eq!(result.data.name, "ToniKroos");
         assert_eq!(result.data.department, "Langenfeld");
-        assert_eq!(result.data.score_sum, 6);
+        assert_eq!(result.data.score_sum, 21);
         assert_eq!(result.data.position, 1);
         assert_eq!(result.data.sum_win_exact, 1);
+        assert_eq!(result.data.extra_point, 15);
         assert_eq!(result.data.sum_team, 0);
         assert_eq!(result.data.tips.len(), 2);
 
